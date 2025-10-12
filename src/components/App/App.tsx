@@ -1,35 +1,71 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { useDebounce } from "use-debounce";
+import { useNotesQuery } from "../../hooks/queries";
+import css from "./App.module.css";
+import SearchBox from "../SearchBox/SearchBox";
+import Pagination from "../Pagination/Pagination";
+import NoteList from "../NoteList/NoteList";
+import Modal from "../Modal/Modal";
+import NoteForm from "../NoteForm/NoteForm";
 
-function App() {
-  const [count, setCount] = useState(0)
+const PER_PAGE = 12;
+
+export default function App() {
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [searchDebounced] = useDebounce(search, 500);
+  const [isModal, setIsModal] = useState(false);
+
+  const { data, isLoading, isError, error } = useNotesQuery({
+    page,
+    perPage: PER_PAGE,
+    search: searchDebounced.trim(),
+  });
+
+  const notes = data?.data ?? [];
+  const totalPages = data?.totalPages ?? 0;
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className={css.app}>
+      <header className={css.toolbar}>
+        <SearchBox
+          value={search}
+          onChange={(v) => {
+            setPage(1);
+            setSearch(v);
+          }}
+        />
 
-export default App
+        {totalPages > 1 && (
+          <Pagination
+            pageCount={totalPages}
+            currentPage={page}
+            onPageChange={(p) => setPage(p)}
+          />
+        )}
+
+        <button className={css.button} onClick={() => setIsModal(true)}>
+          Create note +
+        </button>
+      </header>
+
+      {isLoading && <p style={{ padding: 16 }}>Loading…</p>}
+
+      {isError && (
+        <p style={{ padding: 16, color: "crimson" }}>
+          {error?.message ?? "Request error"}
+        </p>
+      )}
+
+      {notes.length ? (
+        <NoteList items={notes} />
+      ) : (
+        !isLoading && <p style={{ padding: 16 }}>No notes yet</p>
+      )}
+
+      <Modal isOpen={isModal} onClose={() => setIsModal(false)}>
+        <NoteForm onCancel={() => setIsModal(false)} onSuccess={() => setIsModal(false)} />
+      </Modal>
+    </div>
+  );
+}
