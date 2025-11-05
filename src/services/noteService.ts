@@ -1,12 +1,13 @@
-import axios, { AxiosInstance } from "axios";
+import axios from "axios";
+import type { AxiosInstance } from "axios";
 import type { Note, NoteTag } from "../types/note";
 
 const API = "https://notehub-public.goit.study/api";
 
 const token = import.meta.env.VITE_NOTEHUB_TOKEN as string | undefined;
+
+// Не падаємо, просто попереджаємо в консолі (щоб не зламати білд)
 if (!token) {
-  // Не кидаємо помилку на імпорт — лише в рантаймі попередимо в консолі:
-  // користувач на демо все одно побачить UI, але запити не підуть.
   console.warn("VITE_NOTEHUB_TOKEN is not set. API requests will fail.");
 }
 
@@ -15,10 +16,12 @@ const http: AxiosInstance = axios.create({
   headers: token ? { Authorization: `Bearer ${token}` } : undefined,
 });
 
+// ------------ типи для сервісу --------------
+
 export interface FetchNotesParams {
-  page?: number;      // 1-based
-  perPage?: number;   // default 12
-  search?: string;    // optional
+  page?: number; // 1-based
+  perPage?: number; // default 12
+  search?: string; // optional
 }
 
 export interface FetchNotesResponse {
@@ -43,15 +46,27 @@ export interface DeleteNoteResponse {
   data: Note;
 }
 
-export async function fetchNotes(params: FetchNotesParams = {}): Promise<FetchNotesResponse> {
+// ------------ виклики API -------------------
+
+export async function fetchNotes(
+  params: FetchNotesParams = {},
+): Promise<FetchNotesResponse> {
   const { page = 1, perPage = 12, search = "" } = params;
+
   const resp = await http.get<FetchNotesResponse>("/notes", {
-    params: { page, perPage, ...(search ? { search } : {}) },
+    params: {
+      page,
+      perPage,
+      ...(search ? { search } : {}),
+    },
   });
+
   return resp.data;
 }
 
-export async function createNote(body: CreateNoteBody): Promise<CreateNoteResponse> {
+export async function createNote(
+  body: CreateNoteBody,
+): Promise<CreateNoteResponse> {
   const resp = await http.post<CreateNoteResponse>("/notes", body);
   return resp.data;
 }

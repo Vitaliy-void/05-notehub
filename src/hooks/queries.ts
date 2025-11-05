@@ -23,7 +23,6 @@ export function useNotesQuery(params: FetchNotesParams): UseQueryResult<FetchNot
     queryKey: [KEY, params.page ?? 1, params.perPage ?? 12, params.search ?? ""],
     queryFn: () => fetchNotes(params),
     staleTime: 30_000,
-    keepPreviousData: true,
   });
 }
 
