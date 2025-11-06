@@ -13,7 +13,7 @@ interface NoteFormValues {
 }
 
 export interface NoteFormProps {
-  onCancel: () => void; // закриває модалку
+  onCancel: () => void;
 }
 
 const Schema = Yup.object({
@@ -30,9 +30,7 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
   const { mutateAsync, isPending } = useMutation({
     mutationFn: createNote,
     onSuccess: () => {
-      // 1) оновити список нотаток
       qc.invalidateQueries({ queryKey: ["notes"] });
-      // 2) закрити модалку
       onCancel();
     },
   });
