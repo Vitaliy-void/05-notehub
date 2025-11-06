@@ -17,13 +17,14 @@ export default function App() {
   const [isModal, setIsModal] = useState(false);
 
   const { data, isLoading, isError, error } = useNotesQuery({
-    page,
-    perPage: PER_PAGE,
-    search: searchDebounced.trim(),
-  });
+  page,
+  perPage: PER_PAGE,
+  search: searchDebounced.trim(),
+});
 
-  const notes = data?.notes ?? [];
-  const totalPages = data?.totalPages ?? 0;
+const notes = data?.notes ?? [];
+const totalPages = data?.totalPages ?? 0;
+
 
   return (
     <div className={css.app}>

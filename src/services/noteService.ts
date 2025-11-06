@@ -22,10 +22,7 @@ export interface FetchNotesParams {
 
 export interface FetchNotesResponse {
   notes: Note[];
-  page: number;
-  perPage: number;
   totalPages: number;
-  totalItems: number;
 }
 
 export interface CreateNoteBody {
@@ -33,8 +30,6 @@ export interface CreateNoteBody {
   content?: string;
   tag: NoteTag;
 }
-
-// ---- API ----
 
 export async function fetchNotes(
   params: FetchNotesParams = {},

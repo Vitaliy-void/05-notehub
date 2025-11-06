@@ -29,9 +29,7 @@ export function useCreateNote() {
   const qc = useQueryClient();
   return useMutation<Note, Error, CreateNoteBody>({
     mutationFn: createNote,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [KEY] });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [KEY] }),
   });
 }
 
@@ -39,8 +37,6 @@ export function useDeleteNote() {
   const qc = useQueryClient();
   return useMutation<Note, Error, string>({
     mutationFn: deleteNote,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [KEY] });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [KEY] }),
   });
 }
