@@ -2,33 +2,32 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-  type UseMutationResult,
-  type UseQueryResult,
+  keepPreviousData,
 } from "@tanstack/react-query";
 import {
   fetchNotes,
   createNote,
   deleteNote,
   type FetchNotesParams,
-  type CreateNoteBody,
   type FetchNotesResponse,
-  type CreateNoteResponse,
-  type DeleteNoteResponse,
+  type CreateNoteBody,
 } from "../services/noteService";
+import type { Note } from "../types/note";
 
 const KEY = "notes";
 
-export function useNotesQuery(params: FetchNotesParams): UseQueryResult<FetchNotesResponse, Error> {
+export function useNotesQuery(params: FetchNotesParams) {
   return useQuery<FetchNotesResponse, Error>({
     queryKey: [KEY, params.page ?? 1, params.perPage ?? 12, params.search ?? ""],
     queryFn: () => fetchNotes(params),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 
-export function useCreateNote(): UseMutationResult<CreateNoteResponse, Error, CreateNoteBody> {
+export function useCreateNote() {
   const qc = useQueryClient();
-  return useMutation<CreateNoteResponse, Error, CreateNoteBody>({
+  return useMutation<Note, Error, CreateNoteBody>({
     mutationFn: createNote,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [KEY] });
@@ -36,9 +35,9 @@ export function useCreateNote(): UseMutationResult<CreateNoteResponse, Error, Cr
   });
 }
 
-export function useDeleteNote(): UseMutationResult<DeleteNoteResponse, Error, string> {
+export function useDeleteNote() {
   const qc = useQueryClient();
-  return useMutation<DeleteNoteResponse, Error, string>({
+  return useMutation<Note, Error, string>({
     mutationFn: deleteNote,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [KEY] });

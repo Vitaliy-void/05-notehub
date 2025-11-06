@@ -22,7 +22,7 @@ export default function App() {
     search: searchDebounced.trim(),
   });
 
-  const notes = data?.data ?? [];
+  const notes = data?.notes ?? [];
   const totalPages = data?.totalPages ?? 0;
 
   return (
@@ -40,7 +40,7 @@ export default function App() {
           <Pagination
             pageCount={totalPages}
             currentPage={page}
-            onPageChange={(p) => setPage(p)}
+            onPageChange={setPage}
           />
         )}
 
@@ -50,10 +50,9 @@ export default function App() {
       </header>
 
       {isLoading && <p style={{ padding: 16 }}>Loading…</p>}
-
       {isError && (
         <p style={{ padding: 16, color: "crimson" }}>
-          {error?.message ?? "Request error"}
+          {(error as Error)?.message ?? "Request error"}
         </p>
       )}
 
@@ -64,7 +63,7 @@ export default function App() {
       )}
 
       <Modal isOpen={isModal} onClose={() => setIsModal(false)}>
-        <NoteForm onCancel={() => setIsModal(false)} onSuccess={() => setIsModal(false)} />
+        <NoteForm onCancel={() => setIsModal(false)} />
       </Modal>
     </div>
   );
