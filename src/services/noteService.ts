@@ -3,10 +3,8 @@ import type { AxiosInstance } from "axios";
 import type { Note, NoteTag } from "../types/note";
 
 const API = "https://notehub-public.goit.study/api";
-
 const token = import.meta.env.VITE_NOTEHUB_TOKEN as string | undefined;
 
-// Не падаємо, просто попереджаємо в консолі (щоб не зламати білд)
 if (!token) {
   console.warn("VITE_NOTEHUB_TOKEN is not set. API requests will fail.");
 }
@@ -16,16 +14,14 @@ const http: AxiosInstance = axios.create({
   headers: token ? { Authorization: `Bearer ${token}` } : undefined,
 });
 
-// ------------ типи для сервісу --------------
-
 export interface FetchNotesParams {
-  page?: number; // 1-based
-  perPage?: number; // default 12
-  search?: string; // optional
+  page?: number;
+  perPage?: number;
+  search?: string;
 }
 
 export interface FetchNotesResponse {
-  data: Note[];
+  notes: Note[];
   page: number;
   perPage: number;
   totalPages: number;
@@ -38,40 +34,24 @@ export interface CreateNoteBody {
   tag: NoteTag;
 }
 
-export interface CreateNoteResponse {
-  data: Note;
-}
-
-export interface DeleteNoteResponse {
-  data: Note;
-}
-
-// ------------ виклики API -------------------
+// ---- API ----
 
 export async function fetchNotes(
   params: FetchNotesParams = {},
 ): Promise<FetchNotesResponse> {
   const { page = 1, perPage = 12, search = "" } = params;
-
-  const resp = await http.get<FetchNotesResponse>("/notes", {
-    params: {
-      page,
-      perPage,
-      ...(search ? { search } : {}),
-    },
+  const res = await http.get<FetchNotesResponse>("/notes", {
+    params: { page, perPage, ...(search ? { search } : {}) },
   });
-
-  return resp.data;
+  return res.data;
 }
 
-export async function createNote(
-  body: CreateNoteBody,
-): Promise<CreateNoteResponse> {
-  const resp = await http.post<CreateNoteResponse>("/notes", body);
-  return resp.data;
+export async function createNote(body: CreateNoteBody): Promise<Note> {
+  const res = await http.post<Note>("/notes", body);
+  return res.data;
 }
 
-export async function deleteNote(id: string): Promise<DeleteNoteResponse> {
-  const resp = await http.delete<DeleteNoteResponse>(`/notes/${id}`);
-  return resp.data;
+export async function deleteNote(id: string): Promise<Note> {
+  const res = await http.delete<Note>(`/notes/${id}`);
+  return res.data;
 }

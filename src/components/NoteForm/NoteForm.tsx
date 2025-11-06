@@ -2,13 +2,9 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import type { FormikHelpers } from "formik";
 import * as Yup from "yup";
 import css from "./NoteForm.module.css";
-import { useCreateNote } from "../../hooks/queries";
+import { createNote } from "../../services/noteService";
 import type { NoteTag } from "../../types/note";
-
-export interface NoteFormProps {
-  onCancel: () => void;
-  onSuccess?: () => void;
-}
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface NoteFormValues {
   title: string;
@@ -16,21 +12,40 @@ interface NoteFormValues {
   tag: NoteTag | "";
 }
 
+export interface NoteFormProps {
+  onCancel: () => void; // закриває модалку
+}
+
 const Schema = Yup.object({
-  title: Yup.string().min(3, "Min 3").max(50, "Max 50").required("Required"),
-  content: Yup.string().max(500, "Max 500"),
-  tag: Yup.mixed<NoteTag>().oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"]).required("Required"),
+  title: Yup.string().min(3).max(50).required("Title is required"),
+  content: Yup.string().max(500, "Max 500 chars"),
+  tag: Yup.mixed<NoteTag>()
+    .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"])
+    .required("Tag is required"),
 });
 
-export default function NoteForm({ onCancel, onSuccess }: NoteFormProps) {
-  const { mutateAsync, isPending } = useCreateNote();
+export default function NoteForm({ onCancel }: NoteFormProps) {
+  const qc = useQueryClient();
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      // 1) оновити список нотаток
+      qc.invalidateQueries({ queryKey: ["notes"] });
+      // 2) закрити модалку
+      onCancel();
+    },
+  });
 
   const initialValues: NoteFormValues = { title: "", content: "", tag: "" };
 
   const onSubmit = async (values: NoteFormValues, helpers: FormikHelpers<NoteFormValues>) => {
-    await mutateAsync({ title: values.title.trim(), content: values.content.trim(), tag: values.tag as NoteTag });
+    await mutateAsync({
+      title: values.title.trim(),
+      content: values.content.trim(),
+      tag: values.tag as NoteTag,
+    });
     helpers.resetForm();
-    onSuccess?.();
   };
 
   return (
@@ -52,7 +67,9 @@ export default function NoteForm({ onCancel, onSuccess }: NoteFormProps) {
           <div className={css.formGroup}>
             <label htmlFor="tag">Tag</label>
             <Field as="select" id="tag" name="tag" className={css.select}>
-              <option value="" disabled>Select tag…</option>
+              <option value="" disabled>
+                Select tag…
+              </option>
               <option value="Todo">Todo</option>
               <option value="Work">Work</option>
               <option value="Personal">Personal</option>
@@ -63,7 +80,9 @@ export default function NoteForm({ onCancel, onSuccess }: NoteFormProps) {
           </div>
 
           <div className={css.actions}>
-            <button type="button" className={css.cancelButton} onClick={onCancel}>Cancel</button>
+            <button type="button" className={css.cancelButton} onClick={onCancel}>
+              Cancel
+            </button>
             <button type="submit" className={css.submitButton} disabled={!isValid || isPending}>
               {isPending ? "Creating…" : "Create note"}
             </button>
